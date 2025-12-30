@@ -1,0 +1,14 @@
+# ===========================================
+# Namespace Kubernetes pour le lab
+# ===========================================
+# Un namespace permet d'isoler les ressources du lab
+# des autres applications du cluster.
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lab-k8s
+  labels:
+    name: lab-k8s
+    environment: development
+    project: demo-k8s

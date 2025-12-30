@@ -1,0 +1,23 @@
+# ===========================================
+# ConfigMap Kubernetes pour externaliser la configuration
+# ===========================================
+# La ConfigMap permet de stocker la configuration
+# séparément de l'image Docker. Cela facilite
+# les changements de configuration sans rebuild.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demo-k8s-config
+  namespace: lab-k8s
+  labels:
+    app: demo-k8s
+data:
+  # Message personnalisé lu par l'application
+  app.message: "Hello from ConfigMap in Kubernetes!"
+  
+  # Version de l'application
+  app.version: "1.0.0"
+  
+  # Niveau de log
+  logging.level: "INFO"

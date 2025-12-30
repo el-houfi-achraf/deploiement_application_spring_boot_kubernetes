@@ -1,0 +1,125 @@
+# ===========================================
+# Deployment Kubernetes pour demo-k8s
+# ===========================================
+# Le Deployment gère le cycle de vie des pods :
+# - Nombre de replicas
+# - Stratégie de mise à jour (rolling update)
+# - Health probes (liveness/readiness)
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-k8s-deployment
+  namespace: lab-k8s
+  labels:
+    app: demo-k8s
+spec:
+  # Nombre de replicas (pods) à maintenir
+  replicas: 2
+  
+  # Sélecteur pour identifier les pods gérés
+  selector:
+    matchLabels:
+      app: demo-k8s
+  
+  # Stratégie de mise à jour
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # Max pods en plus pendant update
+      maxUnavailable: 0  # Aucun pod down pendant update
+  
+  # Template du pod
+  template:
+    metadata:
+      labels:
+        app: demo-k8s
+        version: "1.0.0"
+    spec:
+      # Containers du pod
+      containers:
+        - name: demo-k8s-container
+          image: demo-k8s:1.0.0
+          
+          # Ne pas tirer l'image du registry (utiliser l'image locale)
+          imagePullPolicy: IfNotPresent
+          
+          # Port exposé par le container
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          
+          # Variables d'environnement
+          env:
+            # Message personnalisé (valeur directe)
+            - name: APP_MESSAGE
+              value: "Hello from Kubernetes Deployment"
+            
+            # Version de l'application
+            - name: APP_VERSION
+              value: "1.0.0"
+            
+            # Nom du pod (utile pour le debugging)
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            
+            # Namespace du pod
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            
+            # Nom du node
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          
+          # Ressources (limites et requêtes)
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          
+          # Probe de readiness : le pod est-il prêt à recevoir du trafic ?
+          # Kubernetes n'enverra pas de trafic tant que cette probe ne passe pas.
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+          
+          # Probe de liveness : l'application est-elle toujours vivante ?
+          # Si cette probe échoue, Kubernetes redémarrera le pod.
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          
+          # Probe de startup (optionnel) : pour les applications lentes à démarrer
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30  # 30 * 5 = 150s max pour démarrer
+      
+      # Graceful shutdown
+      terminationGracePeriodSeconds: 30

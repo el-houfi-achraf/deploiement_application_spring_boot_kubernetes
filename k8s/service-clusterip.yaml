@@ -1,0 +1,28 @@
+# ===========================================
+# Service Kubernetes (ClusterIP - interne uniquement)
+# ===========================================
+# Alternative au NodePort : le service ClusterIP
+# n'est accessible que depuis l'intérieur du cluster.
+# Utile pour la communication entre microservices.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-k8s-internal
+  namespace: lab-k8s
+  labels:
+    app: demo-k8s
+spec:
+  # Type ClusterIP : accessible uniquement dans le cluster
+  type: ClusterIP
+  
+  # Sélecteur
+  selector:
+    app: demo-k8s
+  
+  # Ports
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080

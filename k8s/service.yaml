@@ -1,0 +1,32 @@
+# ===========================================
+# Service Kubernetes (NodePort)
+# ===========================================
+# Le Service expose les pods vers l'extérieur du cluster.
+# Type NodePort : accessible via <NodeIP>:<NodePort>
+# Le port 30080 est exposé sur chaque nœud du cluster.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-k8s-service
+  namespace: lab-k8s
+  labels:
+    app: demo-k8s
+spec:
+  # Type de service : NodePort expose sur un port du nœud (30000-32767)
+  type: NodePort
+  
+  # Sélecteur : quels pods recevoir le trafic
+  selector:
+    app: demo-k8s
+  
+  # Configuration des ports
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080        # Port du service (interne au cluster)
+      targetPort: 8080  # Port du container
+      nodePort: 30080   # Port exposé sur le nœud (30000-32767)
+  
+  # Session affinity (optionnel)
+  # sessionAffinity: ClientIP  # Décommenter pour sticky sessions
